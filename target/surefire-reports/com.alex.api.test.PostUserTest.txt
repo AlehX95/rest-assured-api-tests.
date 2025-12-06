@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.alex.api.test.PostUserTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 6.830 s -- in com.alex.api.test.PostUserTest
