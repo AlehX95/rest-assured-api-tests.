@@ -1,68 +1,109 @@
 package com.alex.api.test;
 
-import io.restassured.RestAssured;
-import io.restassured.response.Response;
 import org.testng.annotations.Test;
 import com.alex.api.base.BaseTest;
 import static org.hamcrest.Matchers.equalTo;
 
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.*;
+
+
+import com.alex.api.base.BaseRequest;
+import payload.PostPayloadBuilder;
 
 public class PostUserTest extends BaseTest {
 
 	@Test
 	public void postUsers() {
 
-	    String body = "{ \"title\": \"Alejandro\", \"body\": \"QA\", \"userId\": 1 }";
-
-	    Response response = RestAssured
-	            .given()
-	                .header("Content-Type", "application/json")
-	                .body(body)
-	                .log().all()
+	    String payload = 
+	    		PostPayloadBuilder.createPostPayload(
+	    				  "Alejandro",
+	    	                "QA",
+	    	                1
+	    				);
+	    		
+	  
+	             given()
+	             .spec(BaseRequest.getRequestSpec())
+	                .body(payload)
 	            .when()
-	                .post("https://jsonplaceholder.typicode.com/posts")
+	                .post("/posts")
 	            .then()
 	                .statusCode(201)    // <-- CORRECCIÓN AQUÍ
-	                .log().all()
-	                .extract().response();
-
-	    System.out.println("Response Body:");
-	    System.out.println(response.getBody().asString());
-
-
-	    String userId = response.jsonPath().getString("id");
-	    System.out.println("ID del usuario creado: " + userId);
-
-	    System.out.println("BASE URI = " + RestAssured.baseURI);
-	    System.out.println("BASE PATH = " + RestAssured.basePath);
+	                .body("title", equalTo("Alejandro"))
+	                .body("body", equalTo("QA"))
+	                .body("userId", equalTo(1))
+	                .body("id", notNullValue());  // siempre devuelve un ID simulado
 
 }
 	
 	@Test
 	public void createPostAndValidate() {
 
-	    String body = "{ \"title\": \"Ivan\", \"body\": \"QA\", \"userId\": 1 }";
+	      String payload = PostPayloadBuilder.createPostPayload(
+	                "Ivan",
+	                "QA",
+	                1
+	        );
 
-	    Response response = RestAssured
-	            .given()
-	                .header("Content-Type", "application/json")
-	                .body(body)
-	                .log().all()
+	    
+	            given()
+	            .spec(BaseRequest.getRequestSpec())
+	                .body(payload)
 	            .when()
 	                .post("/posts")
 	            .then()
 	                .statusCode(201)
 	                .body("title", equalTo("Ivan"))
+	                .body("body", equalTo("QA"))
 	                .body("userId", equalTo(1))
-	                .log().all()
-	                .extract().response();
+	                .body("id", notNullValue());
 	                
-
-	    String id = response.jsonPath().getString("id");
-	    assert id != null && !id.isEmpty();
-
-	    System.out.println("ID generado: " + id);
 	}
+	
+	///Test Negativos///
+	@Test
+	public void postMissingTitle() {
+
+	    String payload = PostPayloadBuilder.postMissingTitle();
+
+	    given()
+	        .spec(BaseRequest.getRequestSpec())
+	        .body(payload)
+	    .when()
+	        .post("/posts")
+	    .then()
+	        .statusCode(201);  // JSONPlaceholder siempre devuelve 201
+	}
+	@Test
+	public void postMissingBody() {
+
+	    String payload = PostPayloadBuilder.postMissingBody();
+
+	    given()
+	        .spec(BaseRequest.getRequestSpec())
+	        .body(payload)
+	    .when()
+	        .post("/posts")
+	    .then()
+	        .statusCode(201);
+	}
+
+	@Test
+	public void postInvalidUserId() {
+
+	    String payload = PostPayloadBuilder.postInvalidUserId();
+
+	    given()
+	        .spec(BaseRequest.getRequestSpec())
+	        .body(payload)
+	    .when()
+	        .post("/posts")
+	    .then()
+	        .statusCode(201);
+	}
+
 
 }
 

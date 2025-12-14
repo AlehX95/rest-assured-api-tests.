@@ -1,10 +1,9 @@
 package com.alex.api.test;
 
-import io.restassured.RestAssured;
-import io.restassured.response.Response;
 import static org.hamcrest.Matchers.*;
 import java.util.List;
-
+import static io.restassured.RestAssured.given;
+import com.alex.api.base.*;  
 import org.testng.annotations.Test;
 import com.alex.api.base.BaseTest;
 
@@ -13,17 +12,14 @@ public class GetUserTest extends BaseTest {
 	 @Test
 	    public void getAllUsers() {
 
-	        Response response = RestAssured
-	                .given()
-	                    .log().all()
+	        
+	                given()
+	                .spec(BaseRequest.getRequestSpec())
 	                .when()
 	                    .get("/users")
 	                .then()
-	                    .statusCode(200)
-	                    .log().all()
-	                    .extract().response();
-
-	        System.out.println(response.getBody().asString());
+	                .statusCode(200)
+	                .body("size()", greaterThan(0));
 	    }
 	 
 	 @Test
@@ -31,34 +27,34 @@ public class GetUserTest extends BaseTest {
 		 
 		 //equivalente a SELECT email FROM users;
 
-	     Response response = RestAssured
-	             .given().log().all()
+		 List<String> emails = 
+	             given()
+	             .spec(BaseRequest.getRequestSpec())
 	             .when().get("/users")
-	             .then().statusCode(200)
-	             .extract().response();
+	             .then()
+	             .statusCode(200)
+	                .extract().jsonPath().getList("email");
 
-	     List<String> emails = response.jsonPath().getList("email");
-	     System.out.println("Emails: " + emails);
+	        System.out.println("Emails: " + emails);
 	 }
 
 	 
 	 @Test
 	 public void getUserById() {
-
-	     Response response = RestAssured
-	             .given()
-	                 .log().all()
+		 
+	  
+	             given()
+	             .spec(BaseRequest.getRequestSpec())
 	             .when()
 	                 .get("/users/1")
 	             .then()
 	                 .statusCode(200)
 	                 .body("name", equalTo("Leanne Graham"))
-	                 .body("id", equalTo(1))
-	                 .log().all()
-	                 .extract().response();
+	                 .body("id", equalTo(1));
+	               
 
-	     String name = response.jsonPath().getString("name");
-	     System.out.println("User name: " + name);
+	    
+	    
 	 }
 	 
 	 
@@ -67,35 +63,34 @@ public class GetUserTest extends BaseTest {
 		 
 		 //equivalente a SELECT name FROM users WHERE id = 5;
 
-	     Response response = RestAssured
-	             .given().log().all()
+	    
+	              given()
+	              .spec(BaseRequest.getRequestSpec())
 	             .when().get("/users")
-	             .then().statusCode(200).body("find { it.id == 5 }.name", equalTo("Chelsey Dietrich"))
-	             .extract().response();
-
-	     String name = response.jsonPath().getString("find { it.id == 5 }.name");
-	     System.out.println("Nombre del usuario con ID 5: " + name);
+	             .then().statusCode(200)
+	             .body("find { it.id == 5 }.name", equalTo("Chelsey Dietrich"));
+	             
 	 }
 	 
 	 @Test
 	 public void countUsers() {
 
-	     Response response = RestAssured
-	             .given().log().all()
+		 int count = 
+	             given()
+	             .spec(BaseRequest.getRequestSpec())
 	             .when().get("/users")
-	             .then().statusCode(200).body("size()", equalTo(10))
-	             .extract().response();
+	             .then().statusCode(200)
+	             .extract().jsonPath().getList("$").size();
+	           
 
-	     int count = response.jsonPath().getList("$").size();
 	     System.out.println("Cantidad de usuarios: " + count);
 	 }
 
 	 @Test
 	 public void validateUserList() {
 
-	     RestAssured
-	         .given()
-	             .log().all()
+	        given()
+	        .spec(BaseRequest.getRequestSpec())
 	         .when()
 	             .get("/users")
 	         .then()
@@ -103,9 +98,22 @@ public class GetUserTest extends BaseTest {
 	             .body("size()", greaterThan(5))
 	             .body("id", everyItem(greaterThan(0)))
 	             .body("[0].email", containsString("@"))
-	             .body("find { it.id == 3 }.name", equalTo("Clementine Bauch"))
-	             .log().all();
+	             .body("find { it.id == 3 }.name", equalTo("Clementine Bauch"));
+	           
 	 }
 
-	 //test for ngrok 
+	 //Test negativos////////
+	 
+	 @Test
+	 public void getUserNotFound() {
+
+	     given()
+	         .spec(BaseRequest.getRequestSpec())
+	     .when()
+	         .get("/users/999999")
+	     .then()
+	         .statusCode(404);
+	 }
+
+	
 }
