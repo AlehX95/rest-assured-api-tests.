@@ -56,5 +56,23 @@ public class PostPayloadBuilder {
     public static String malformedPostJson() {
         return "{ \"title\": \"Test\" "; // intencionalmente mal
     }
+    
+    //=========================
+    //Payload method for PATCH
+    //========================= 
+    
+    public static String patchTitlePayload(String newTitle) {
+        return "{\n" +
+                "  \"title\": \"" + newTitle + "\"\n" +
+                "}";
+    }
+    
+    public static String patchBodyPayload(String newBody) {
+        return "{\n" +
+                "  \"body\": \"" + newBody + "\"\n" +
+                "}";
+    }
+
+
 }
 
