@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <suite name="API Suite">
     <test name="API Tests">
-        <classes>
-            <class name="com.alex.api.test.GetUserTest"/>
-        </classes>
+        <packages>
+            <package name="com.alex.api.test"/>
+        </packages>
     </test>
 </suite>

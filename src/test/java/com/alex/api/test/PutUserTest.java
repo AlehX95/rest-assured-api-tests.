@@ -6,12 +6,60 @@ import static org.hamcrest.Matchers.*;
 import org.testng.annotations.Test;
 
 import com.alex.api.base.BaseRequest;
+import com.alex.api.dataprovider.PutPojoDataProvider;
+import com.alex.api.models.PostModel;
+import com.alex.api.models.UserModel;
+
 import payload.PostPayloadBuilder;
 
 public class PutUserTest {
 
+    // ============================================================
+    //                 POSITIVE TESTS USING POJO (RECOMMENDED)
+    // ============================================================
+	
+	
+	@Test(dataProvider = "validPutUsers", dataProviderClass = PutPojoDataProvider.class)
+	public void updateUser_WithPojoDataProvider(UserModel user) {
+
+	    given()
+	        .spec(BaseRequest.getRequestSpec())
+	        .body(user)
+	    .when()
+	        .put("/users/1")     // siempre actualizamos el mismo ID
+	    .then()
+	        .statusCode(200);
+	}
+
     @Test
-    public void updatePostSuccessfully() {
+    public void updatePost_WithPojo_ShouldReturn200() {
+
+        PostModel updatedPost = new PostModel(
+                "Updated Title",
+                "Updated Body",
+                1
+        );
+
+        given()
+            .spec(BaseRequest.getRequestSpec())
+            .body(updatedPost)       // 👈 POJO convertido a JSON automáticamente
+        .when()
+            .put("/posts/1")
+        .then()
+            .statusCode(200)
+            .body("title", equalTo("Updated Title"))
+            .body("body", equalTo("Updated Body"))
+            .body("userId", equalTo(1));
+    }
+
+
+
+    // ============================================================
+    //       POSITIVE TESTS USING PAYLOADBUILDER (LEGACY / OLDER)
+    // ============================================================
+
+    @Test
+    public void updatePost_WithPayloadBuilder_ShouldReturn200() {
 
         String payload = PostPayloadBuilder.createPostPayload(
                 "Updated Title",
@@ -30,9 +78,10 @@ public class PutUserTest {
             .body("body", equalTo("Updated Body"))
             .body("userId", equalTo(1));
     }
-    
+
+
     @Test
-    public void updatePostWithDefaultPayload() {
+    public void updatePost_WithDefaultPayload_ShouldReturn200() {
 
         String payload = PostPayloadBuilder.createPostPayload();
 
@@ -47,14 +96,15 @@ public class PutUserTest {
             .body("body", equalTo("Default Body"))
             .body("userId", equalTo(1));
     }
-    
+
+
 
     // ============================================================
-    //                         PUT NEGATIVOS
+    //                       NEGATIVE TESTS (NEG)
     // ============================================================
 
     @Test
-    public void updatePostMissingTitle() {
+    public void updatePost_MissingTitle_ShouldStillReturn200_ButFailInRealAPI() {
 
         String payload = PostPayloadBuilder.postMissingTitle();
 
@@ -64,13 +114,12 @@ public class PutUserTest {
         .when()
             .put("/posts/1")
         .then()
-            // JSONPlaceholder devuelve 200 siempre
-            .statusCode(200);
+            .statusCode(200); // JSONPlaceholder no valida datos
     }
 
 
     @Test
-    public void updatePostMissingBody() {
+    public void updatePost_MissingBody_ShouldStillReturn200_ButFailInRealAPI() {
 
         String payload = PostPayloadBuilder.postMissingBody();
 
@@ -85,7 +134,7 @@ public class PutUserTest {
 
 
     @Test
-    public void updatePostWithInvalidUserId() {
+    public void updatePost_InvalidUserId_ShouldStillReturn200() {
 
         String payload = PostPayloadBuilder.postInvalidUserId();
 
@@ -100,7 +149,7 @@ public class PutUserTest {
 
 
     @Test
-    public void updatePostMalformedJson() {
+    public void updatePost_MalformedJson_ShouldReturnErrorOr200() {
 
         String payload = PostPayloadBuilder.malformedPostJson();
 
@@ -110,10 +159,8 @@ public class PutUserTest {
         .when()
             .put("/posts/1")
         .then()
-            .statusCode(anyOf(is(400), is(500), is(200)));
-            // Nota:
-            // JSONPlaceholder ignora errores y puede responder 200
-            // API reales deberían devolver 400 o 500
+            .statusCode(anyOf(is(400), is(500), is(200))); 
+            // JSONPlaceholder puede devolver 200
     }
 
 }
