@@ -1,3 +1,17 @@
-target/
+# IDEs
+/.idea
+/.settings
+/.classpath
+/.project
+
+# Build / Reports
+/target
+/allure-results
+/allure-report
+
+# Logs
 *.log
-*.tmp
+
+# OS
+.DS_Store
+Thumbs.db
