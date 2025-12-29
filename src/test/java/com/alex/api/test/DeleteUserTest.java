@@ -1,59 +1,65 @@
 package com.alex.api.test;
-import static io.restassured.RestAssured.given;
 
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.alex.api.base.BaseRequest;
+import com.alex.api.base.BaseTest;
+import com.alex.api.utils.AllureUtils;
 
-public class DeleteUserTest {
+import io.restassured.response.Response;
+
+public class DeleteUserTest extends BaseTest{
 
 
     //                   DELETE POSITIVO
     // ============================================================
 
-    @Test
-    public void deletePostSuccessfully() {
+	@Test
+	public void deletePostSuccessfully() {
 
-        given()
-            .spec(BaseRequest.getRequestSpec())
-        .when()
-            .delete("/posts/1")
-        .then()
-            .statusCode(200); 
+	    Response response = baseRequest.deletePost(1);
+
+	    AllureUtils.attachStatusCode(response.getStatusCode());
+
+	    Assert.assertEquals(response.getStatusCode(), 200);
+	}
+
             // JSONPlaceholder siempre devuelve 200 OK
-    }
+    
 
 
     // ============================================================
     //                    DELETE NEGATIVO (ID no existe)
     // ============================================================
 
-    @Test
-    public void deleteNonExistingPost() {
+	@Test
+	public void deleteNonExistingPost() {
 
-        given()
-            .spec(BaseRequest.getRequestSpec())
-        .when()
-            .delete("/posts/99999")
-        .then()
-            .statusCode(200);
+	    Response response = baseRequest.deletePost(99999);
+
+	    AllureUtils.attachStatusCode(response.getStatusCode());
+
+	    Assert.assertEquals(response.getStatusCode(), 200);
+	}
+
             // JSONPlaceholder igual responde 200 
             // En una API real esto sería 404
-    }
+    
+
 
 
     // ============================================================
     //                  DELETE NEGATIVO (ruta incorrecta)
     // ============================================================
 
-    @Test
-    public void deleteInvalidEndpoint() {
+	@Test
+	public void deleteInvalidEndpoint() {
 
-        given()
-            .spec(BaseRequest.getRequestSpec())
-        .when()
-            .delete("/postsss/1")  // endpoint incorrecto
-        .then()
-            .statusCode(404);
-    }
+	    Response response = baseRequest.deleteInvalidEndpoint();
+
+	    AllureUtils.attachStatusCode(response.getStatusCode());
+
+	    Assert.assertEquals(response.getStatusCode(), 404);
+	}
+
 }

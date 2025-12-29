@@ -26,7 +26,7 @@ public class UserModel {
     public List<String> getRoles() { return roles; }
     public AddressModel getAddress() { return address; }
 
-    // Setters opcionales
+    // Setters optionals
     public void setName(String name) { this.name = name; }
     public void setJob(String job) { this.job = job; }
     public void setAge(Integer age) { this.age = age; }

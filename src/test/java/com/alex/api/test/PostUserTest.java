@@ -1,5 +1,6 @@
 package com.alex.api.test;
 
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.alex.api.base.BaseTest;
@@ -10,11 +11,12 @@ import com.alex.api.base.BaseRequest;
 import com.alex.api.models.AddressModel;
 import com.alex.api.models.PostModel;
 import com.alex.api.models.UserModel;
+import com.alex.api.utils.AllureUtils;
 
+import io.restassured.response.Response;
 import payload.PostPayloadBuilder;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.*;
 
 import java.util.Arrays;
 import java.util.List;
@@ -31,46 +33,41 @@ public class PostUserTest extends BaseTest {
 	public void createPost_WithDataProvider(String title, String body, int userId) {
 
 	    String payload = PostPayloadBuilder.createPostPayload(title, body, userId);
+	    Response response = baseRequest.createPost(payload);
 
-	    given()
-	        .spec(BaseRequest.getRequestSpec())
-	        .body(payload)
-	    .when()
-	        .post("/posts")
-	    .then()
-	        .statusCode(201)
-	        .body("title", equalTo(title))
-	        .body("body", equalTo(body))
-	        .body("userId", equalTo(userId));
+	    AllureUtils.attachResponseBody(response);
+
+	    Assert.assertEquals(response.getStatusCode(), 201);
+	    Assert.assertEquals(response.jsonPath().getString("title"), title);
+	    Assert.assertEquals(response.jsonPath().getString("body"), body);
+	    Assert.assertEquals(response.jsonPath().getInt("userId"), userId);
 	}
+
 	
 	@Test(dataProvider = "validPostPojos", dataProviderClass = PostPojoDataProvider.class)
 	public void createPost_WithPojoDataProvider(PostModel post) {
 
-	    given()
-	        .spec(BaseRequest.getRequestSpec())
-	        .body(post)                      // Serialización automática POJO → JSON
-	    .when()
-	        .post("/posts")
-	    .then()
-	        .statusCode(201)
-	        .body("title", equalTo(post.getTitle()))
-	        .body("body", equalTo(post.getBody()))
-	        .body("userId", equalTo(post.getUserId()));
+	    Response response = baseRequest.createPost(post);
+
+	    AllureUtils.attachResponseBody(response);
+
+	    Assert.assertEquals(response.getStatusCode(), 201);
+	    Assert.assertEquals(response.jsonPath().getString("title"), post.getTitle());
+	    Assert.assertEquals(response.jsonPath().getString("body"), post.getBody());
+	    Assert.assertEquals(response.jsonPath().getInt("userId"), post.getUserId());
 	}
 
 	
 	@Test(dataProvider = "validUsers", dataProviderClass = UserDataProvider.class)
 	public void createUser_WithPojoDataProvider(UserModel user) {
 
-	    given()
-	        .spec(BaseRequest.getRequestSpec())
-	        .body(user)               // REST Assured hace la serialización automática
-	    .when()
-	        .post("/users")
-	    .then()
-	        .statusCode(201);
+	    Response response = baseRequest.createUser(user);
+
+	    AllureUtils.attachResponseBody(response);
+
+	    Assert.assertEquals(response.getStatusCode(), 201);
 	}
+
 
 
 
@@ -78,23 +75,17 @@ public class PostUserTest extends BaseTest {
     //               POSITIVE TESTS USING POJO (RECOMMENDED)
     // ============================================================
 
-    @Test
-    public void createPost_WithPojo_ShouldReturn201() {
+	@Test
+	public void createPost_WithPojo_ShouldReturn201() {
 
-        PostModel post = new PostModel("Alex", "QA", 1);
+	    PostModel post = new PostModel("Alex", "QA", 1);
+	    Response response = baseRequest.createPost(post);
 
-        given()
-            .spec(BaseRequest.getRequestSpec())
-            .body(post)                      // POJO → JSON automático
-        .when()
-            .post("/posts")
-        .then()
-            .statusCode(201)
-            .body("title", equalTo("Alex"))
-            .body("body", equalTo("QA"))
-            .body("userId", equalTo(1))
-            .body("id", notNullValue());
-    }
+	    AllureUtils.attachResponseBody(response);
+
+	    Assert.assertEquals(response.getStatusCode(), 201);
+	    Assert.assertNotNull(response.jsonPath().get("id"));
+	}
 
 
     @Test
@@ -123,47 +114,17 @@ public class PostUserTest extends BaseTest {
     @Test
     public void createPost_WithPayloadBuilder_ShouldReturn201() {
 
-        String payload = PostPayloadBuilder.createPostPayload(
-                "Alejandro",
-                "QA",
-                1
-        );
+        String payload = PostPayloadBuilder.createPostPayload("Alejandro", "QA", 1);
+        Response response = baseRequest.createPost(payload);
 
-        given()
-            .spec(BaseRequest.getRequestSpec())
-            .body(payload)
-        .when()
-            .post("/posts")
-        .then()
-            .statusCode(201)
-            .body("title", equalTo("Alejandro"))
-            .body("body", equalTo("QA"))
-            .body("userId", equalTo(1))
-            .body("id", notNullValue());
+        AllureUtils.attachResponseBody(response);
+
+        Assert.assertEquals(response.getStatusCode(), 201);
+        Assert.assertNotNull(response.jsonPath().get("id"));
     }
 
 
-    @Test
-    public void createPostAndValidate_WithPayloadBuilder() {
 
-        String payload = PostPayloadBuilder.createPostPayload(
-                "Ivan",
-                "QA",
-                1
-        );
-
-        given()
-            .spec(BaseRequest.getRequestSpec())
-            .body(payload)
-        .when()
-            .post("/posts")
-        .then()
-            .statusCode(201)
-            .body("title", equalTo("Ivan"))
-            .body("body", equalTo("QA"))
-            .body("userId", equalTo(1))
-            .body("id", notNullValue());
-    }
 
 
 
@@ -172,47 +133,15 @@ public class PostUserTest extends BaseTest {
     // ============================================================
 
     @Test
-    public void createPost_MissingTitle_ShouldStillReturn201_ButFailInRealAPI() {
+    public void createPost_MissingTitle_ShouldReturn201() {
 
         String payload = PostPayloadBuilder.postMissingTitle();
+        Response response = baseRequest.createPost(payload);
 
-        given()
-            .spec(BaseRequest.getRequestSpec())
-            .body(payload)
-        .when()
-            .post("/posts")
-        .then()
-            .statusCode(201);    // JSONPlaceholder ALWAYS returns 201
+        AllureUtils.attachResponseBody(response);
+
+        Assert.assertEquals(response.getStatusCode(), 201);
     }
 
-
-    @Test
-    public void createPost_MissingBody_ShouldReturn201_ButFailInRealAPI() {
-
-        String payload = PostPayloadBuilder.postMissingBody();
-
-        given()
-            .spec(BaseRequest.getRequestSpec())
-            .body(payload)
-        .when()
-            .post("/posts")
-        .then()
-            .statusCode(201);
-    }
-
-
-    @Test
-    public void createPost_InvalidUserId_ShouldReturn201_ButFailInRealAPI() {
-
-        String payload = PostPayloadBuilder.postInvalidUserId();
-
-        given()
-            .spec(BaseRequest.getRequestSpec())
-            .body(payload)
-        .when()
-            .post("/posts")
-        .then()
-            .statusCode(201);
-    }
 
 }

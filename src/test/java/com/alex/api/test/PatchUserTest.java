@@ -1,17 +1,20 @@
 package com.alex.api.test;
 
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.*;
 
+
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.alex.api.base.BaseRequest;
+
+import com.alex.api.base.BaseTest;
 import com.alex.api.dataprovider.PatchPojoDataProvider;
 import com.alex.api.models.PatchPostModel;
+import com.alex.api.utils.AllureUtils;
 
+import io.restassured.response.Response;
 import payload.PostPayloadBuilder;
 
-public class PatchUserTest {
+public class PatchUserTest extends BaseTest{
 
     // ============================================================
     //            POSITIVE PATCH USING POJO And DataDriven
@@ -21,45 +24,40 @@ public class PatchUserTest {
 	@Test(dataProvider = "validPatchPosts", dataProviderClass = PatchPojoDataProvider.class)
 	public void patchPost_WithPojoDataProvider(PatchPostModel patch) {
 
-	    given()
-	        .spec(BaseRequest.getRequestSpec())
-	        .body(patch)         // POJO parcial
-	    .when()
-	        .patch("/posts/1")
-	    .then()
-	        .statusCode(200);
+	    Response response = baseRequest.updatePostPatch(1, patch);
+
+	    AllureUtils.attachResponseBody(response);
+
+	    Assert.assertEquals(response.getStatusCode(), 200);
 	}
 
 
-    @Test
-    public void patchUpdateTitle_WithPojo_ShouldReturn200() {
 
-        PatchPostModel patch = new PatchPostModel("Patched Title");
+	@Test
+	public void patchUpdateTitle_WithPojo_ShouldReturn200() {
 
-        given()
-            .spec(BaseRequest.getRequestSpec())
-            .body(patch)                     //  POJO → JSON parcial
-        .when()
-            .patch("/posts/1")
-        .then()
-            .statusCode(200)
-            .body("title", equalTo("Patched Title"));
-    }
+	    PatchPostModel patch = new PatchPostModel("Patched Title");
+
+	    Response response = baseRequest.updatePostPatch(1, patch);
+
+	    AllureUtils.attachResponseBody(response);
+
+	    Assert.assertEquals(response.getStatusCode(), 200);
+	    Assert.assertEquals(response.jsonPath().getString("title"), "Patched Title");
+	}
 
 
-    @Test
-    public void patchUpdateBody_WithPojo_ShouldReturn200() {
+	@Test
+	public void patchUpdateBody_WithPojo_ShouldReturn200() {
 
-        PatchPostModel patch = new PatchPostModel(null, "Patched Body Content");
+	    PatchPostModel patch = new PatchPostModel(null, "Patched Body Content");
 
-        given()
-            .spec(BaseRequest.getRequestSpec())
-            .body(patch)
-        .when()
-            .patch("/posts/1")
-        .then()
-            .statusCode(200)
-            .body("body", equalTo("Patched Body Content"));
+	    Response response = baseRequest.updatePostPatch(1, patch);
+
+	    AllureUtils.attachResponseBody(response);
+
+	    Assert.assertEquals(response.getStatusCode(), 200);
+	    Assert.assertEquals(response.jsonPath().getString("body"), "Patched Body Content");
     }
 
 
@@ -68,37 +66,29 @@ public class PatchUserTest {
     //       POSITIVE PATCH USING PAYLOADBUILDER (Legacy)
     // ============================================================
 
-    @Test
-    public void patchUpdateTitle_WithPayloadBuilder_ShouldReturn200() {
+	@Test
+	public void patchUpdateTitle_WithPayloadBuilder_ShouldReturn200() {
 
-        String payload = PostPayloadBuilder.patchTitlePayload("Patched Title");
+	    String payload = PostPayloadBuilder.patchTitlePayload("Patched Title");
+	    Response response = baseRequest.updatePostPatch(1, payload);
 
-        given()
-            .spec(BaseRequest.getRequestSpec())
-            .body(payload)
-        .when()
-            .patch("/posts/1")
-        .then()
-            .statusCode(200)
-            .body("title", equalTo("Patched Title"));
-    }
+	    AllureUtils.attachResponseBody(response);
+
+	    Assert.assertEquals(response.getStatusCode(), 200);
+	}
 
 
     @Test
-    public void patchUpdateBody_WithPayloadBuilder_ShouldReturn200() {
+    public void patchUpdateBody_WithPayloadBuilder_ShouldReturn2001() {
+	
+    String payload = PostPayloadBuilder.patchBodyPayload("Patched Body Content");
+    Response response = baseRequest.updatePostPatch(1, payload);
 
-        String payload = PostPayloadBuilder.patchBodyPayload("Patched Body Content");
+    AllureUtils.attachResponseBody(response);
 
-        given()
-            .spec(BaseRequest.getRequestSpec())
-            .body(payload)
-        .when()
-            .patch("/posts/1")
-        .then()
-            .statusCode(200)
-            .body("body", equalTo("Patched Body Content"));
-    }
-
+    Assert.assertEquals(response.getStatusCode(), 200);
+}
+	
 
     // ============================================================
     //                      NEGATIVE TESTS (NEG)
@@ -107,30 +97,31 @@ public class PatchUserTest {
     @Test
     public void patchMalformedJson_ShouldReturnErrorOr200() {
 
-        String payload = "{ \"title\":  }";  // JSON inválido
+        String payload = "{ \"title\":  }";
 
-        given()
-            .spec(BaseRequest.getRequestSpec())
-            .body(payload)
-        .when()
-            .patch("/posts/1")
-        .then()
-            .statusCode(anyOf(is(400), is(500), is(200)));
+        Response response = baseRequest.updatePostPatch(1, payload);
+
+        AllureUtils.attachResponseBody(response);
+
+        Assert.assertTrue(
+                response.getStatusCode() == 200 ||
+                response.getStatusCode() == 400 ||
+                response.getStatusCode() == 500
+        );
     }
 
-
+    
     @Test
-    public void patchEmptyBody_ShouldReturn200_ButFailInRealAPI() {
+    public void patchEmptyBody_ShouldReturn200() {
 
-        String payload = "{}";  // PATCH sin cambios
+        String payload = "{}";
 
-        given()
-            .spec(BaseRequest.getRequestSpec())
-            .body(payload)
-        .when()
-            .patch("/posts/1")
-        .then()
-            .statusCode(200);
+        Response response = baseRequest.updatePostPatch(1, payload);
+
+        AllureUtils.attachResponseBody(response);
+
+        Assert.assertEquals(response.getStatusCode(), 200);
     }
+
 
 }

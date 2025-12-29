@@ -1,17 +1,22 @@
 package com.alex.api.base;
 
+
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Listeners;
 
-import io.restassured.RestAssured;
 
+
+import io.qameta.allure.testng.AllureTestNg;
+
+
+@Listeners({ AllureTestNg.class })
 public class BaseTest {
 
-	
-	
-	@BeforeClass
-	public void setup() {
-	    RestAssured.baseURI = "https://jsonplaceholder.typicode.com";
-	   // RestAssured.basePath = "  ";
-	}
+    protected BaseRequest baseRequest;
+
+    @BeforeClass
+    public void setup() {
+        baseRequest = new BaseRequest();
+    }
 
 }
