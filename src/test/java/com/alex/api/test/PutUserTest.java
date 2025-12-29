@@ -2,6 +2,7 @@ package com.alex.api.test;
 
 
 import org.testng.Assert;
+import org.testng.Reporter;
 import org.testng.annotations.Test;
 
 import com.alex.api.base.BaseTest;
@@ -126,16 +127,20 @@ public class PutUserTest extends BaseTest{
 	    Assert.assertEquals(response.getStatusCode(), 200);
     }
 
-
     @Test
     public void updatePost_MalformedJson_ShouldReturnErrorOr200() {
 
-	    String payload = PostPayloadBuilder.malformedPostJson();
-	    Response response = baseRequest.updatePostPut(1, payload);
+        String payload = PostPayloadBuilder.malformedPostJson();
+        Response response = baseRequest.updatePostPut(1, payload);
 
-	    AllureUtils.attachResponseBody(response);
+        Reporter.getCurrentTestResult().setAttribute("response", response);
 
-	    Assert.assertEquals(response.getStatusCode(), 200);
+        int statusCode = response.getStatusCode();
+
+        Assert.assertTrue(
+            statusCode == 200 || statusCode == 400 || statusCode == 500,
+            "Unexpected status code: " + statusCode
+        );
     }
 
 }
